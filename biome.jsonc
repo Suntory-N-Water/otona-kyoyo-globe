@@ -1,0 +1,116 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.4.3/schema.json",
+  "vcs": {
+    "enabled": false,
+    "clientKind": "git",
+    "useIgnoreFile": false
+  },
+  "files": {
+    "ignoreUnknown": false,
+    "includes": [
+      "**/*.{cjs,mjs,cts,mts,js,jsx,ts,tsx}",
+      "**/*.json",
+      "**/*.jsonc",
+      "**/*.html",
+      "!node_modules",
+      "!**/dist"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "formatWithErrors": true,
+    "attributePosition": "auto",
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 80,
+    "includes": [
+      "**/*.{cjs,mjs,cts,mts,js,jsx,ts,tsx}",
+      "**/*.json",
+      "**/*.jsonc",
+      "**/*.html",
+      "!node_modules",
+      "!**/dist"
+    ]
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "security": {
+        "noDangerouslySetInnerHtml": "off"
+      },
+      "suspicious": {
+        // any 関連
+        "noExplicitAny": "error",
+        "noImplicitAnyLet": "error",
+        "noEvolvingTypes": "error",
+        // v2.4 で nursery から昇格
+        "noImportCycles": "error",
+        "noUnusedExpressions": "error"
+      },
+      "style": {
+        // Interface じゃなくて type を使う
+        "useConsistentTypeDefinitions": {
+          "level": "warn",
+          "options": {
+            "style": "type"
+          }
+        },
+        "noParameterAssign": "error",
+        "useConsistentArrayType": "error",
+        "useArrayLiterals": "error",
+        // if 文でブロックを強制する
+        "useBlockStatements": "error"
+      },
+      "complexity": {
+        // v2.4 で nursery から昇格
+        "noUselessUndefined": "error"
+      },
+      "nursery": {
+        "noUnnecessaryConditions": "error",
+        // v2.4 types ドメイン: Promise 関連
+        "noFloatingPromises": "error",
+        "noMisusedPromises": "error"
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "jsxQuoteStyle": "single",
+      "semicolons": "always",
+      "trailingCommas": "all"
+    }
+  },
+  "assist": {
+    "enabled": true,
+    "actions": {
+      "source": {
+        "organizeImports": "on",
+        // v2.4: 重複 CSS クラスの検出・除去
+        "noDuplicateClasses": "on"
+      }
+    }
+  },
+  "html": {
+    // v2.4: Astro/Vue/Svelte の実験的フルサポート
+    "experimentalFullSupportEnabled": true,
+    "formatter": {
+      "enabled": true,
+      "indentStyle": "space",
+      "indentWidth": 2,
+      "lineWidth": 80
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.css"],
+      "formatter": {
+        "enabled": false
+      },
+      "linter": {
+        "enabled": false
+      }
+    }
+  ]
+}

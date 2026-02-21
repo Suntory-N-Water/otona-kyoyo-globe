@@ -1,0 +1,46 @@
+name: データパイプライン
+
+on:
+  schedule:
+    # 毎日 00:00 JST (15:00 UTC)
+    - cron: '0 15 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-locations:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup
+
+      - uses: ./.github/actions/playwright-setup
+
+      - name: Step 1 - 動画一覧 + 字幕取得
+        run: bun run pipeline:fetch
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+
+      # TODO: LLM プロバイダー選定後に有効化する
+      # - name: Step 2 - AI 地名抽出
+      #   run: bun run pipeline:extract
+
+      - name: Step 3 - ジオコーディング
+        run: bun run pipeline:geocode
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+
+      - name: Step 4 - バリデーション + マージ
+        run: bun run pipeline:validate
+
+      - name: 変更をコミット
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add src/data/locations.json
+          git diff --staged --quiet || git commit -m "data: ロケ地データを更新"
+          git push

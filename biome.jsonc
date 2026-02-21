@@ -1,19 +1,37 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.3/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.3.14/schema.json",
   "vcs": {
-    "enabled": true,
+    "enabled": false,
     "clientKind": "git",
-    "useIgnoreFile": true
+    "useIgnoreFile": false
   },
   "files": {
-    "ignoreUnknown": false
+    "ignoreUnknown": false,
+    "includes": [
+      "**/*.{js,jsx,ts,tsx}",
+      "**/*.json",
+      "**/*.jsonc",
+      "**/*.html",
+      "!node_modules",
+      "!!**/dist",
+      "!worker-configuration.d.ts"
+    ]
   },
   "formatter": {
     "enabled": true,
+    "formatWithErrors": true,
     "attributePosition": "auto",
     "indentStyle": "space",
     "indentWidth": 2,
-    "lineWidth": 80
+    "lineWidth": 80,
+    "includes": [
+      "**/*.{js,jsx,ts,tsx}",
+      "**/*.json",
+      "**/*.jsonc",
+      "**/*.html",
+      "!node_modules",
+      "!!**/dist"
+    ]
   },
   "linter": {
     "enabled": true,
@@ -26,9 +44,7 @@
         // any 関連
         "noExplicitAny": "error",
         "noImplicitAnyLet": "error",
-        "noEvolvingTypes": "error",
-        "noImportCycles": "error",
-        "noUnusedExpressions": "error"
+        "noEvolvingTypes": "error"
       },
       "style": {
         // Interface じゃなくて type を使う
@@ -44,15 +60,11 @@
         // if 文でブロックを強制する
         "useBlockStatements": "error"
       },
-      "complexity": {
-        "noUselessUndefined": "error"
-      },
       "nursery": {
-        "noUnnecessaryConditions": "error",
-        "noFloatingPromises": "error",
-        "noMisusedPromises": "error"
+        "noUnnecessaryConditions": "error"
       }
-    }
+    },
+    "includes": ["src/**/*.{js,jsx,ts,tsx}"]
   },
   "javascript": {
     "formatter": {
@@ -70,12 +82,26 @@
       }
     }
   },
+  "html": {
+    "formatter": {
+      "enabled": true,
+      "indentStyle": "space",
+      "indentWidth": 2,
+      "lineWidth": 80
+    }
+  },
   "overrides": [
     {
       "includes": ["**/*.css"],
       "formatter": {
         "enabled": false
       },
+      "linter": {
+        "enabled": false
+      }
+    },
+    {
+      "includes": ["**/route.ts", "**/route.tsx"],
       "linter": {
         "enabled": false
       }

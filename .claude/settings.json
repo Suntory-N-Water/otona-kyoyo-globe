@@ -37,7 +37,8 @@
       "Bash(bun lint:*)",
       "Bash(bun format:*)",
       "WebFetch",
-      "WebSearch"
+      "WebSearch",
+      "Bash(uv:*)"
     ],
     "deny": [
       "Bash(rm -rf:*)",
@@ -99,5 +100,8 @@
     "type": "command",
     "command": "node ~/.claude/scripts/statusline.js"
   },
-  "plansDirectory": ".claude/plans"
+  "plansDirectory": ".claude/plans",
+  "env": {
+    "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1"
+  }
 }

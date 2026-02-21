@@ -1,33 +1,53 @@
-import { useState } from 'react';
-import viteLogo from '/vite.svg';
-import reactLogo from './assets/react.svg';
-import './App.css';
+import { useCallback, useState } from 'react';
+import type { PointOfView } from '@/components/globe/globe-scene';
+import { GlobeView } from '@/components/globe/globe-view';
+import { MapView } from '@/components/map/map-view';
+import { BackButton } from '@/components/overlay/back-button';
+import { GuideOverlay } from '@/components/overlay/guide-overlay';
+import { SiteHeader } from '@/components/overlay/site-header';
+import { useGuide } from '@/hooks/use-guide';
+import type { LocationGroup } from '@/types/location';
+
+type AppView =
+  | { screen: 'globe'; returnPov?: PointOfView }
+  | { screen: 'map'; target: LocationGroup; returnPov: PointOfView };
 
 function App() {
-  const [count, setCount] = useState(0);
+  const [view, setView] = useState<AppView>({ screen: 'globe' });
+  const { showGuide, dismissGuide } = useGuide();
+
+  const handleLocationClick = useCallback(
+    (group: LocationGroup, returnPov: PointOfView) => {
+      dismissGuide();
+      setView({ screen: 'map', target: group, returnPov });
+    },
+    [dismissGuide],
+  );
+
+  const handleBack = useCallback(() => {
+    if (view.screen === 'map') {
+      setView({ screen: 'globe', returnPov: view.returnPov });
+    }
+  }, [view]);
 
   return (
     <>
-      <div>
-        <a href='https://vite.dev' target='_blank' rel='noopener'>
-          <img src={viteLogo} className='logo' alt='Vite logo' />
-        </a>
-        <a href='https://react.dev' target='_blank' rel='noopener'>
-          <img src={reactLogo} className='logo react' alt='React logo' />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className='card'>
-        <button type='button' onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className='read-the-docs'>
-        Click on the Vite and React logos to learn more
-      </p>
+      {view.screen === 'globe' && (
+        <>
+          <GlobeView
+            onLocationClick={handleLocationClick}
+            restorePov={view.returnPov}
+          />
+          <SiteHeader />
+          {showGuide && <GuideOverlay onDismiss={dismissGuide} />}
+        </>
+      )}
+      {view.screen === 'map' && (
+        <>
+          <MapView target={view.target} />
+          <BackButton onClick={handleBack} />
+        </>
+      )}
     </>
   );
 }

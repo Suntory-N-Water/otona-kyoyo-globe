@@ -35,7 +35,9 @@
       "Bash(bun type-check:*)",
       "Bash(bun check:*)",
       "Bash(bun lint:*)",
-      "Bash(bun format:*)"
+      "Bash(bun format:*)",
+      "WebFetch",
+      "WebSearch"
     ],
     "deny": [
       "Bash(rm -rf:*)",
@@ -54,9 +56,7 @@
       "Bash(git checkout:*)",
       "Bash(git switch:*)",
       "Bash(rm:*)",
-      "Bash(curl:*)",
-      "WebFetch",
-      "WebSearch"
+      "Bash(curl:*)"
     ]
   },
   "hooks": {

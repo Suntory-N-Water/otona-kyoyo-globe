@@ -1,36 +1,19 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.4.3/schema.json",
   "vcs": {
-    "enabled": false,
+    "enabled": true,
     "clientKind": "git",
-    "useIgnoreFile": false
+    "useIgnoreFile": true
   },
   "files": {
-    "ignoreUnknown": false,
-    "includes": [
-      "**/*.{cjs,mjs,cts,mts,js,jsx,ts,tsx}",
-      "**/*.json",
-      "**/*.jsonc",
-      "**/*.html",
-      "!node_modules",
-      "!**/dist"
-    ]
+    "ignoreUnknown": false
   },
   "formatter": {
     "enabled": true,
-    "formatWithErrors": true,
     "attributePosition": "auto",
     "indentStyle": "space",
     "indentWidth": 2,
-    "lineWidth": 80,
-    "includes": [
-      "**/*.{cjs,mjs,cts,mts,js,jsx,ts,tsx}",
-      "**/*.json",
-      "**/*.jsonc",
-      "**/*.html",
-      "!node_modules",
-      "!**/dist"
-    ]
+    "lineWidth": 80
   },
   "linter": {
     "enabled": true,
@@ -44,7 +27,6 @@
         "noExplicitAny": "error",
         "noImplicitAnyLet": "error",
         "noEvolvingTypes": "error",
-        // v2.4 で nursery から昇格
         "noImportCycles": "error",
         "noUnusedExpressions": "error"
       },
@@ -63,12 +45,10 @@
         "useBlockStatements": "error"
       },
       "complexity": {
-        // v2.4 で nursery から昇格
         "noUselessUndefined": "error"
       },
       "nursery": {
         "noUnnecessaryConditions": "error",
-        // v2.4 types ドメイン: Promise 関連
         "noFloatingPromises": "error",
         "noMisusedPromises": "error"
       }
@@ -86,20 +66,8 @@
     "enabled": true,
     "actions": {
       "source": {
-        "organizeImports": "on",
-        // v2.4: 重複 CSS クラスの検出・除去
-        "noDuplicateClasses": "on"
+        "organizeImports": "on"
       }
-    }
-  },
-  "html": {
-    // v2.4: Astro/Vue/Svelte の実験的フルサポート
-    "experimentalFullSupportEnabled": true,
-    "formatter": {
-      "enabled": true,
-      "indentStyle": "space",
-      "indentWidth": 2,
-      "lineWidth": 80
     }
   },
   "overrides": [

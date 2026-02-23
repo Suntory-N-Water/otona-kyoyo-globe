@@ -9,8 +9,6 @@ type LocationData = {
   name: string;
   lat: number;
   lng: number;
-  confidenceScore: number;
-  needsReview: boolean;
 };
 
 type VideoData = {
@@ -40,11 +38,6 @@ function validateVideo(video: VideoData): string[] {
     if (loc.lng < -180 || loc.lng > 180) {
       errors.push(`[${vid}] locations[${i}] lng が範囲外: ${loc.lng}`);
     }
-    if (loc.confidenceScore < 0 || loc.confidenceScore > 1) {
-      errors.push(
-        `[${vid}] locations[${i}] confidenceScore が範囲外: ${loc.confidenceScore}`,
-      );
-    }
   }
 
   return errors;
@@ -68,12 +61,7 @@ function merge(existing: LocationsFile, newVideos: VideoData[]): LocationsFile {
 
   // 新規データをマージ(既存動画は viewCount を更新)
   for (const video of newVideos) {
-    const existingVideo = videoMap.get(video.videoId);
-    if (existingVideo) {
-      existingVideo.viewCount = video.viewCount;
-    } else {
-      videoMap.set(video.videoId, video);
-    }
+    videoMap.set(video.videoId, video);
   }
 
   // publishedAt で降順ソート

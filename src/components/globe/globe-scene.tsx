@@ -60,9 +60,10 @@ export function GlobeScene({ onLocationClick, restorePov }: GlobeSceneProps) {
 
       const currentPov = globe.pointOfView() as PointOfView;
 
-      // ズームインアニメーション
+      // 現在より引いている場合のみズームイン、既に近い場合はそのまま寄る
+      const targetAltitude = Math.min(currentPov.altitude, 1.8);
       globe.pointOfView(
-        { lat: group.lat, lng: group.lng, altitude: 1.8 },
+        { lat: group.lat, lng: group.lng, altitude: targetAltitude },
         CAMERA_TRANSITION_MS,
       );
 

@@ -1,4 +1,149 @@
 {
-  "generatedAt": "",
-  "videos": []
+  "generatedAt": "2026-02-23T23:16:10Z",
+  "videos": [
+    {
+      "videoId": "3vHiPVPiEc8",
+      "title": "【あと100年毒垂れ流し】1万5千人が消えた雲の上の楽園に行ってみたら衝撃的な光景が…",
+      "thumbnailUrl": "https://i.ytimg.com/vi/3vHiPVPiEc8/mqdefault.jpg",
+      "publishedAt": "2025-12-20T11:00:08Z",
+      "viewCount": 286883,
+      "locations": [
+        {
+          "id": "3vHiPVPiEc8-0",
+          "name": "松尾鉱山跡",
+          "lat": 39.9402,
+          "lng": 140.9419
+        },
+        {
+          "id": "3vHiPVPiEc8-1",
+          "name": "松尾鉱山緑ヶ丘アパート",
+          "lat": 39.9365,
+          "lng": 140.9507
+        },
+        {
+          "id": "3vHiPVPiEc8-2",
+          "name": "玉川温泉",
+          "lat": 39.9616,
+          "lng": 140.7226
+        },
+        {
+          "id": "3vHiPVPiEc8-3",
+          "name": "旧松尾鉱山新中和処理施設",
+          "lat": 39.9309,
+          "lng": 140.9515
+        }
+      ]
+    },
+    {
+      "videoId": "d-P_T30Shus",
+      "title": "日本兵2万人が犠牲に…グアム島に残された戦争の爪痕をめぐる 地獄の戦場を現地からわかりやすく解説",
+      "thumbnailUrl": "https://i.ytimg.com/vi/d-P_T30Shus/mqdefault.jpg",
+      "publishedAt": "2025-12-02T05:51:05Z",
+      "viewCount": 79739,
+      "locations": [
+        {
+          "id": "d-P_T30Shus-0",
+          "name": "アサンビーチ",
+          "lat": 13.4722,
+          "lng": 144.7142
+        },
+        {
+          "id": "d-P_T30Shus-1",
+          "name": "アサン・ビーチ展望台",
+          "lat": 13.4682,
+          "lng": 144.7176
+        },
+        {
+          "id": "d-P_T30Shus-2",
+          "name": "アガットビーチ",
+          "lat": 13.3879,
+          "lng": 144.6461
+        },
+        {
+          "id": "d-P_T30Shus-3",
+          "name": "アリファン山",
+          "lat": 13.3855,
+          "lng": 144.6644
+        },
+        {
+          "id": "d-P_T30Shus-4",
+          "name": "マンガン山 日本軍司令部跡",
+          "lat": 13.4542,
+          "lng": 144.7219
+        },
+        {
+          "id": "d-P_T30Shus-5",
+          "name": "マタグアックの丘",
+          "lat": 13.5469,
+          "lng": 144.8647
+        },
+        {
+          "id": "d-P_T30Shus-6",
+          "name": "横井ケーブ(タロフォフォの滝公園内)",
+          "lat": 13.3244,
+          "lng": 144.7458
+        },
+        {
+          "id": "d-P_T30Shus-7",
+          "name": "グアム鎮魂社",
+          "lat": 13.5222,
+          "lng": 144.8153
+        }
+      ]
+    },
+    {
+      "videoId": "dUaCAVcrmWI",
+      "title": "【インド解説】何がヤバい？世界一カオスな国を現地からわかりやすく解説",
+      "thumbnailUrl": "https://i.ytimg.com/vi/dUaCAVcrmWI/mqdefault.jpg",
+      "publishedAt": "2025-03-28T11:00:59Z",
+      "viewCount": 2585064,
+      "locations": [
+        {
+          "id": "dUaCAVcrmWI-0",
+          "name": "デリー駅前",
+          "lat": 28.6428,
+          "lng": 77.2201
+        },
+        {
+          "id": "dUaCAVcrmWI-1",
+          "name": "ニューデリー",
+          "lat": 28.6139,
+          "lng": 77.209
+        }
+      ]
+    },
+    {
+      "videoId": "clFtrDq0FoA",
+      "title": "【ユーゴスラビア内戦】戦後最悪の紛争を現地からわかりやすく解説",
+      "thumbnailUrl": "https://i.ytimg.com/vi/clFtrDq0FoA/mqdefault.jpg",
+      "publishedAt": "2024-12-29T11:00:07Z",
+      "viewCount": 558419,
+      "locations": [
+        {
+          "id": "clFtrDq0FoA-0",
+          "name": "ベオグラード",
+          "lat": 44.7866,
+          "lng": 20.4489
+        },
+        {
+          "id": "clFtrDq0FoA-1",
+          "name": "ラテン橋",
+          "lat": 43.8575,
+          "lng": 18.4289
+        },
+        {
+          "id": "clFtrDq0FoA-2",
+          "name": "ユーゴスラビア博物館",
+          "lat": 44.7865,
+          "lng": 20.4507
+        },
+        {
+          "id": "clFtrDq0FoA-3",
+          "name": "スレブレニツァ・ポトチャリ記念センター",
+          "lat": 44.1578,
+          "lng": 19.3006
+        }
+      ]
+    }
+  ]
 }

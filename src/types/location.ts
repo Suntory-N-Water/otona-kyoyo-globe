@@ -3,8 +3,6 @@ export type Location = {
   name: string;
   lat: number;
   lng: number;
-  confidenceScore: number;
-  needsReview: boolean;
 };
 
 export type Video = {

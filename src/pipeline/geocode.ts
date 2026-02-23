@@ -1,13 +1,12 @@
 /**
  * Step 3: 地名から座標(lat/lng)を取得する
  *
- * Nominatim → Google Places API のフォールバック構成。
+ * LLM座標をプライマリとし、Nominatim → Google Places API をフォールバックに使用。
  */
 
 import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import {
-  CONFIDENCE_THRESHOLD,
   EXTRACTED_LOCATIONS_PATH,
   GEOCODED_LOCATIONS_PATH,
   GOOGLE_API_KEY,
@@ -19,8 +18,14 @@ import {
 type GeoResult = {
   lat: number;
   lng: number;
-  confidenceScore: number;
   source: string;
+};
+
+type ExtractedLocation = {
+  name: string;
+  region: string;
+  lat: number | null;
+  lng: number | null;
 };
 
 type ExtractedVideo = {
@@ -29,7 +34,7 @@ type ExtractedVideo = {
   thumbnailUrl: string;
   publishedAt: string;
   viewCount: number;
-  extractedLocations: { name: string; context: string }[];
+  extractedLocations: ExtractedLocation[];
 };
 
 // メモリキャッシュ(同一地名の重複リクエスト回避)
@@ -40,64 +45,91 @@ function sleep(ms: number): Promise<void> {
 }
 
 /** Nominatim API で地名を検索する */
-async function geocodeNominatim(name: string): Promise<GeoResult | null> {
-  if (geocodeCache.has(name)) {
-    return geocodeCache.get(name) ?? null;
-  }
-
+async function queryNominatim(
+  query: string,
+  lang: string,
+): Promise<GeoResult | null> {
   await sleep(NOMINATIM_RATE_LIMIT_MS);
 
-  try {
-    const params = new URLSearchParams({
-      q: name,
-      format: 'json',
-      limit: '1',
-      'accept-language': 'ja',
-    });
+  const params = new URLSearchParams({
+    q: query,
+    format: 'json',
+    limit: '1',
+    'accept-language': lang,
+  });
 
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/search?${params}`,
-      {
-        headers: { 'User-Agent': NOMINATIM_USER_AGENT },
-        signal: AbortSignal.timeout(10 * 1000),
-      },
-    );
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}`);
+  const res = await fetch(
+    `https://nominatim.openstreetmap.org/search?${params}`,
+    {
+      headers: { 'User-Agent': NOMINATIM_USER_AGENT },
+      signal: AbortSignal.timeout(10 * 1000),
+    },
+  );
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
+
+  const results = await res.json();
+  if (results.length > 0) {
+    const result = results[0];
+    return {
+      lat: Number.parseFloat(result.lat),
+      lng: Number.parseFloat(result.lon),
+      source: 'nominatim',
+    };
+  }
+  return null;
+}
+
+/** Nominatim で日本語→英語の順にリトライする */
+async function geocodeNominatim(
+  name: string,
+  region: string,
+): Promise<GeoResult | null> {
+  const cacheKey = `nominatim|${name}|${region}`;
+  if (geocodeCache.has(cacheKey)) {
+    return geocodeCache.get(cacheKey) ?? null;
+  }
+
+  try {
+    // 日本語クエリで検索
+    const jaQuery = region ? `${name} ${region}` : name;
+    const jaResult = await queryNominatim(jaQuery, 'ja');
+    if (jaResult) {
+      geocodeCache.set(cacheKey, jaResult);
+      return jaResult;
     }
 
-    const results = await res.json();
-    if (results.length > 0) {
-      const result = results[0];
-      const importance = Number.parseFloat(result.importance ?? '0.5');
-      const geocoded: GeoResult = {
-        lat: Number.parseFloat(result.lat),
-        lng: Number.parseFloat(result.lon),
-        confidenceScore:
-          Math.round(Math.min(importance + 0.2, 1.0) * 100) / 100,
-        source: 'nominatim',
-      };
-      geocodeCache.set(name, geocoded);
-      return geocoded;
+    // 日本語で見つからなければ英語クエリでリトライ(サラエボ→Sarajevo 等)
+    console.log(`[geocode] Nominatim英語リトライ: ${name}`);
+    const enQuery = region ? `${name} ${region}` : name;
+    const enResult = await queryNominatim(enQuery, 'en');
+    if (enResult) {
+      geocodeCache.set(cacheKey, enResult);
+      return enResult;
     }
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error(`[geocode] Nominatimエラー: ${name} - ${msg}`);
   }
 
-  geocodeCache.set(name, null);
+  geocodeCache.set(cacheKey, null);
   return null;
 }
 
 /** Google Places API (Text Search) で地名を検索する */
-async function geocodeGooglePlaces(name: string): Promise<GeoResult | null> {
+async function geocodeGooglePlaces(
+  name: string,
+  region: string,
+): Promise<GeoResult | null> {
   if (!GOOGLE_API_KEY) {
     return null;
   }
 
   try {
+    const query = region ? `${name} ${region}` : name;
     const params = new URLSearchParams({
-      query: name,
+      query,
       key: GOOGLE_API_KEY,
       language: 'ja',
     });
@@ -115,25 +147,9 @@ async function geocodeGooglePlaces(name: string): Promise<GeoResult | null> {
     if (results.length > 0) {
       const result = results[0];
       const location = result.geometry.location;
-
-      // types による信頼度調整
-      const types = new Set<string>(result.types ?? []);
-      const highConfidenceTypes = new Set([
-        'country',
-        'administrative_area_level_1',
-        'locality',
-        'natural_feature',
-        'point_of_interest',
-        'tourist_attraction',
-      ]);
-
-      const typeMatch = [...types].some((t) => highConfidenceTypes.has(t));
-      const score = typeMatch ? 0.85 : 0.7;
-
       return {
         lat: location.lat,
         lng: location.lng,
-        confidenceScore: score,
         source: 'google_places',
       };
     }
@@ -146,14 +162,30 @@ async function geocodeGooglePlaces(name: string): Promise<GeoResult | null> {
 }
 
 /** Nominatim → Google Places のフォールバックでジオコーディングする */
-async function geocode(name: string): Promise<GeoResult | null> {
-  const result = await geocodeNominatim(name);
+async function geocodeFallback(
+  name: string,
+  region: string,
+): Promise<GeoResult | null> {
+  const result = await geocodeNominatim(name, region);
   if (result) {
     return result;
   }
 
   console.log(`[geocode] フォールバック→Google Places: ${name}`);
-  return geocodeGooglePlaces(name);
+  return geocodeGooglePlaces(name, region);
+}
+
+/**
+ * LLM座標をプライマリとし、なければ Nominatim/Places にフォールバックする
+ */
+async function geocode(loc: ExtractedLocation): Promise<GeoResult | null> {
+  // LLM座標がある場合はそのまま採用
+  if (loc.lat !== null && loc.lng !== null) {
+    return { lat: loc.lat, lng: loc.lng, source: 'llm' };
+  }
+
+  // LLM座標がない場合はフォールバック
+  return geocodeFallback(loc.name, loc.region);
 }
 
 async function main() {
@@ -175,28 +207,36 @@ async function main() {
     return;
   }
 
-  const allNames = new Set<string>();
+  // name+region ペアでユニーク化し、LLM座標も保持
+  const locEntries = new Map<string, ExtractedLocation>();
   for (const video of videos) {
     for (const loc of video.extractedLocations ?? []) {
-      allNames.add(loc.name);
+      const key = `${loc.name}|${loc.region}`;
+      if (!locEntries.has(key)) {
+        locEntries.set(key, loc);
+      }
     }
   }
 
-  const sortedNames = [...allNames].sort();
-  console.log(`[geocode] ユニーク地名: ${sortedNames.length}件`);
+  const sortedEntries = [...locEntries.values()].sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
+  console.log(`[geocode] ユニーク地名: ${sortedEntries.length}件`);
 
   const geocodedMap = new Map<string, GeoResult | null>();
-  for (let i = 0; i < sortedNames.length; i++) {
-    const name = sortedNames[i];
-    const result = await geocode(name);
-    geocodedMap.set(name, result);
+  for (let i = 0; i < sortedEntries.length; i++) {
+    const loc = sortedEntries[i];
+    const key = `${loc.name}|${loc.region}`;
+    const result = await geocode(loc);
+    geocodedMap.set(key, result);
+    const label = loc.region ? `${loc.name}(${loc.region})` : loc.name;
     if (result) {
       console.log(
-        `[geocode] ${i + 1}/${sortedNames.length}: ${name} → (${result.lat.toFixed(4)}, ${result.lng.toFixed(4)}) [${result.source}]`,
+        `[geocode] ${i + 1}/${sortedEntries.length}: ${label} → (${result.lat.toFixed(4)}, ${result.lng.toFixed(4)}) [${result.source}]`,
       );
     } else {
       console.log(
-        `[geocode] ${i + 1}/${sortedNames.length}: ${name} → 見つからず`,
+        `[geocode] ${i + 1}/${sortedEntries.length}: ${label} → 見つからず`,
       );
     }
   }
@@ -205,7 +245,8 @@ async function main() {
   const results = videos.map((video) => {
     const locations = (video.extractedLocations ?? [])
       .map((loc, j) => {
-        const geo = geocodedMap.get(loc.name);
+        const key = `${loc.name}|${loc.region}`;
+        const geo = geocodedMap.get(key);
         if (!geo) {
           return null;
         }
@@ -215,8 +256,6 @@ async function main() {
           name: loc.name,
           lat: geo.lat,
           lng: geo.lng,
-          confidenceScore: geo.confidenceScore,
-          needsReview: geo.confidenceScore < CONFIDENCE_THRESHOLD,
         };
       })
       .filter((loc) => loc !== null);
@@ -238,12 +277,17 @@ async function main() {
   );
 
   const total = results.reduce((sum, v) => sum + v.locations.length, 0);
-  const reviewCount = results.reduce(
-    (sum, v) => sum + v.locations.filter((l) => l.needsReview).length,
-    0,
-  );
+  const sourceCount = { llm: 0, nominatim: 0, google_places: 0 };
+  for (const geo of geocodedMap.values()) {
+    if (geo) {
+      const key = geo.source as keyof typeof sourceCount;
+      if (key in sourceCount) {
+        sourceCount[key]++;
+      }
+    }
+  }
   console.log(
-    `[geocode] 完了: ${total}件(要レビュー${reviewCount}件) → ${GEOCODED_LOCATIONS_PATH}`,
+    `[geocode] 完了: ${total}件 (LLM=${sourceCount.llm}, Nominatim=${sourceCount.nominatim}, Places=${sourceCount.google_places}) → ${GEOCODED_LOCATIONS_PATH}`,
   );
 }
 

@@ -26,7 +26,6 @@ export const TRANSCRIPT_MAX_CHARS = 5000;
 // ジオコーディング
 export const NOMINATIM_USER_AGENT = 'otona-kyoyo-globe/1.0';
 export const NOMINATIM_RATE_LIMIT_MS = 1000;
-export const CONFIDENCE_THRESHOLD = 0.7;
-
 // API キー
 export const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY ?? '';
+export const GEMINI_API_KEY = process.env.GEMINI_API_KEY ?? '';

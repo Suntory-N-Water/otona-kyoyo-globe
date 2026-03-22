@@ -142,7 +142,10 @@ async function fetchTranscripts(
 }
 
 async function main() {
-  const args = process.argv.slice(2);
+  const rawArgs = process.argv.slice(2);
+  const force = rawArgs.includes('--force');
+  const args = rawArgs.filter((a) => a !== '--force');
+
   if (args.length === 0) {
     console.error(
       '使い方: bun run src/pipeline/fetch-videos.ts VIDEO_ID_OR_URL [...]',
@@ -160,14 +163,36 @@ async function main() {
   const videoIds = args.map(parseVideoId);
   console.log(`[fetch] 対象動画: ${videoIds.join(', ')}`);
 
-  const videos = await fetchVideoDetails(videoIds);
+  // 既存データを先に読み込む(スキップ判定 + 後続マージで使い回す)
+  const existing: VideoMeta[] = existsSync(NEW_VIDEOS_PATH)
+    ? JSON.parse(await readFile(NEW_VIDEOS_PATH, 'utf-8'))
+    : [];
+  const existingIds = new Set(existing.map((v) => v.videoId));
+
+  // 処理済み videoId はスキップ(--force で強制再処理)
+  const targetIds = force
+    ? videoIds
+    : videoIds.filter((id) => {
+        if (existingIds.has(id)) {
+          console.log(`[fetch] スキップ(処理済み): ${id}`);
+          return false;
+        }
+        return true;
+      });
+
+  if (targetIds.length === 0) {
+    console.log('[fetch] 全件スキップ。新規動画なし');
+    return;
+  }
+
+  const videos = await fetchVideoDetails(targetIds);
   if (videos.length === 0) {
     console.error('[fetch] エラー: 動画が見つかりません');
     process.exit(1);
   }
   console.log(`[fetch] メタデータ取得: ${videos.length}本`);
 
-  const transcripts = await fetchTranscripts(videoIds);
+  const transcripts = await fetchTranscripts(targetIds);
 
   const results: VideoMeta[] = videos.map((video) => ({
     ...video,
@@ -175,9 +200,6 @@ async function main() {
   }));
 
   // 既存データとマージ(同一 videoId は上書き更新)
-  const existing: VideoMeta[] = existsSync(NEW_VIDEOS_PATH)
-    ? JSON.parse(await readFile(NEW_VIDEOS_PATH, 'utf-8'))
-    : [];
   const videoMap = new Map(existing.map((v) => [v.videoId, v]));
   for (const video of results) {
     videoMap.set(video.videoId, video);

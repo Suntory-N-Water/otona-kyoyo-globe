@@ -8,6 +8,7 @@ import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import {
   EXTRACTED_LOCATIONS_PATH,
+  GEOCODE_CACHE_PATH,
   GEOCODED_LOCATIONS_PATH,
   GOOGLE_API_KEY,
   NOMINATIM_RATE_LIMIT_MS,
@@ -20,6 +21,9 @@ type GeoResult = {
   lng: number;
   source: string;
 };
+
+type GeocodeCacheEntry = { lat: number; lng: number; source: string };
+type GeocodeCache = Record<string, GeocodeCacheEntry>;
 
 type ExtractedLocation = {
   name: string;
@@ -176,9 +180,21 @@ async function geocodeFallback(
 }
 
 /**
- * LLM座標をプライマリとし、なければ Nominatim/Places にフォールバックする
+ * LLM座標をプライマリとし、なければ Nominatim/Places にフォールバックする。
+ * 永続キャッシュにヒットした場合は外部APIリクエスト不要。
  */
-async function geocode(loc: ExtractedLocation): Promise<GeoResult | null> {
+async function geocode(
+  loc: ExtractedLocation,
+  persistentCache: GeocodeCache,
+): Promise<GeoResult | null> {
+  const cacheKey = `${loc.name}|${loc.region}`;
+
+  // 永続キャッシュヒット → 外部APIリクエスト不要
+  const cached = persistentCache[cacheKey];
+  if (cached) {
+    return { lat: cached.lat, lng: cached.lng, source: cached.source };
+  }
+
   // LLM座標がある場合はそのまま採用
   if (loc.lat !== null && loc.lng !== null) {
     return { lat: loc.lat, lng: loc.lng, source: 'llm' };
@@ -189,6 +205,8 @@ async function geocode(loc: ExtractedLocation): Promise<GeoResult | null> {
 }
 
 async function main() {
+  const force = process.argv.includes('--force');
+
   if (!existsSync(EXTRACTED_LOCATIONS_PATH)) {
     console.error(`エラー: ${EXTRACTED_LOCATIONS_PATH} が見つかりません`);
     console.error('先に extract-locations.ts を実行してください');
@@ -196,6 +214,11 @@ async function main() {
   }
 
   await mkdir(REGISTRY_DIR, { recursive: true });
+
+  // 永続キャッシュ読み込み
+  const persistentCache: GeocodeCache = existsSync(GEOCODE_CACHE_PATH)
+    ? JSON.parse(await readFile(GEOCODE_CACHE_PATH, 'utf-8'))
+    : {};
 
   const videos: ExtractedVideo[] = JSON.parse(
     await readFile(EXTRACTED_LOCATIONS_PATH, 'utf-8'),
@@ -207,9 +230,38 @@ async function main() {
     return;
   }
 
+  // 既存データを先に読み込む(スキップ判定 + 後続マージで使い回す)
+  const existingData: {
+    videoId: string;
+    title: string;
+    thumbnailUrl: string;
+    publishedAt: string;
+    viewCount: number;
+    locations: { id: string; name: string; lat: number; lng: number }[];
+  }[] = existsSync(GEOCODED_LOCATIONS_PATH)
+    ? JSON.parse(await readFile(GEOCODED_LOCATIONS_PATH, 'utf-8'))
+    : [];
+  const processedIds = new Set(existingData.map((v) => v.videoId));
+
+  // 処理済み videoId はスキップ(--force で強制再処理)
+  const targetVideos = force
+    ? videos
+    : videos.filter((v) => {
+        if (processedIds.has(v.videoId)) {
+          console.log(`[geocode] スキップ(処理済み): ${v.videoId}`);
+          return false;
+        }
+        return true;
+      });
+
+  if (targetVideos.length === 0) {
+    console.log('[geocode] 全件スキップ。新規動画なし');
+    return;
+  }
+
   // name+region ペアでユニーク化し、LLM座標も保持
   const locEntries = new Map<string, ExtractedLocation>();
-  for (const video of videos) {
+  for (const video of targetVideos) {
     for (const loc of video.extractedLocations ?? []) {
       const key = `${loc.name}|${loc.region}`;
       if (!locEntries.has(key)) {
@@ -227,7 +279,7 @@ async function main() {
   for (let i = 0; i < sortedEntries.length; i++) {
     const loc = sortedEntries[i];
     const key = `${loc.name}|${loc.region}`;
-    const result = await geocode(loc);
+    const result = await geocode(loc, persistentCache);
     geocodedMap.set(key, result);
     const label = loc.region ? `${loc.name}(${loc.region})` : loc.name;
     if (result) {
@@ -241,8 +293,27 @@ async function main() {
     }
   }
 
+  // 永続キャッシュを更新・保存
+  for (const [key, result] of geocodedMap) {
+    if (result) {
+      persistentCache[key] = {
+        lat: result.lat,
+        lng: result.lng,
+        source: result.source,
+      };
+    }
+  }
+  await writeFile(
+    GEOCODE_CACHE_PATH,
+    JSON.stringify(persistentCache, null, 2),
+    'utf-8',
+  );
+  console.log(
+    `[geocode] キャッシュ保存: ${Object.keys(persistentCache).length}件 → ${GEOCODE_CACHE_PATH}`,
+  );
+
   // 動画データに座標を付与
-  const results = videos.map((video) => {
+  const results = targetVideos.map((video) => {
     const locations = (video.extractedLocations ?? [])
       .map((loc, j) => {
         const key = `${loc.name}|${loc.region}`;
@@ -271,9 +342,6 @@ async function main() {
   });
 
   // 既存データとマージ(同一 videoId は上書き更新)
-  const existingData: typeof results = existsSync(GEOCODED_LOCATIONS_PATH)
-    ? JSON.parse(await readFile(GEOCODED_LOCATIONS_PATH, 'utf-8'))
-    : [];
   const videoMap = new Map(existingData.map((v) => [v.videoId, v]));
   for (const video of results) {
     videoMap.set(video.videoId, video);

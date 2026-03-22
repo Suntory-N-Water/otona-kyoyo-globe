@@ -185,6 +185,8 @@ function parseJsonResponse(text: string): RawLocation[] {
 }
 
 async function main() {
+  const force = process.argv.includes('--force');
+
   if (!GEMINI_API_KEY) {
     console.error('エラー: GEMINI_API_KEY が設定されていません');
     process.exit(1);
@@ -208,24 +210,48 @@ async function main() {
     return;
   }
 
-  console.log(`[extract] 処理対象: ${videos.length}本`);
-
-  const results: {
+  // 既存データを先に読み込む(スキップ判定 + 後続マージで使い回す)
+  const existingData: {
     videoId: string;
     title: string;
     thumbnailUrl: string;
     publishedAt: string;
     viewCount: number;
     extractedLocations: ExtractedLocation[];
-  }[] = [];
+  }[] = existsSync(EXTRACTED_LOCATIONS_PATH)
+    ? JSON.parse(await readFile(EXTRACTED_LOCATIONS_PATH, 'utf-8'))
+    : [];
+  const processedIds = new Set(existingData.map((v) => v.videoId));
 
-  for (let i = 0; i < videos.length; i++) {
-    const video = videos[i];
+  // 処理済み videoId はスキップ(--force で強制再処理)
+  const targetVideos = force
+    ? videos
+    : videos.filter((v) => {
+        if (processedIds.has(v.videoId)) {
+          console.log(`[extract] スキップ(処理済み): ${v.videoId}`);
+          return false;
+        }
+        return true;
+      });
+
+  if (targetVideos.length === 0) {
+    console.log('[extract] 全件スキップ。新規動画なし');
+    return;
+  }
+
+  console.log(
+    `[extract] 処理対象: ${targetVideos.length}本 (スキップ: ${videos.length - targetVideos.length}本)`,
+  );
+
+  const results: typeof existingData = [];
+
+  for (let i = 0; i < targetVideos.length; i++) {
+    const video = targetVideos[i];
     const userPrompt = buildUserPrompt(video);
     const response = await callLlm(SYSTEM_PROMPT, userPrompt);
     const locations = normalizeLocations(parseJsonResponse(response));
     console.log(
-      `[extract] ${i + 1}/${videos.length}: ${video.title.slice(0, 40)} → ${locations.length}件`,
+      `[extract] ${i + 1}/${targetVideos.length}: ${video.title.slice(0, 40)} → ${locations.length}件`,
     );
 
     results.push({
@@ -239,9 +265,6 @@ async function main() {
   }
 
   // 既存データとマージ(同一 videoId は上書き更新)
-  const existingData: typeof results = existsSync(EXTRACTED_LOCATIONS_PATH)
-    ? JSON.parse(await readFile(EXTRACTED_LOCATIONS_PATH, 'utf-8'))
-    : [];
   const videoMap = new Map(existingData.map((v) => [v.videoId, v]));
   for (const video of results) {
     videoMap.set(video.videoId, video);

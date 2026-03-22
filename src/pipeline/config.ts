@@ -19,6 +19,7 @@ export const GEOCODED_LOCATIONS_PATH = resolve(
   REGISTRY_DIR,
   'geocoded_locations.json',
 );
+export const GEOCODE_CACHE_PATH = resolve(REGISTRY_DIR, 'geocode_cache.json');
 
 // YouTube
 export const TRANSCRIPT_MAX_CHARS = 5000;

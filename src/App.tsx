@@ -33,20 +33,26 @@ function App() {
   return (
     <>
       {view.screen === 'globe' && (
-        <>
+        <div
+          key='globe'
+          className='fixed inset-0 animate-in fade-in duration-300'
+        >
           <GlobeView
             onLocationClick={handleLocationClick}
             restorePov={view.returnPov}
           />
           <SiteHeader />
           {showGuide && <GuideOverlay onDismiss={dismissGuide} />}
-        </>
+        </div>
       )}
       {view.screen === 'map' && (
-        <>
+        <div
+          key='map'
+          className='fixed inset-0 animate-in fade-in duration-300'
+        >
           <MapView target={view.target} />
           <BackButton onClick={handleBack} />
-        </>
+        </div>
       )}
     </>
   );

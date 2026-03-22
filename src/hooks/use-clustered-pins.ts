@@ -9,6 +9,7 @@ export type ClusterPin = {
   isCluster: boolean;
   count: number;
   group?: LocationGroup;
+  clusterGroups?: LocationGroup[];
 };
 
 // globe.gl の altitude からおおよその zoom レベルに変換
@@ -45,12 +46,22 @@ export function useClusteredPins(groups: LocationGroup[], altitude: number) {
       const props = feature.properties;
 
       if ('cluster' in props && props.cluster) {
+        const leaves = index.getLeaves(
+          feature.id as number,
+          Number.POSITIVE_INFINITY,
+        );
+        const clusterGroups = leaves.map((leaf) => {
+          const leafGroupIndex = (leaf.properties as { groupIndex: number })
+            .groupIndex;
+          return groups[leafGroupIndex];
+        });
         return {
           id: `cluster-${feature.id}`,
           lat,
           lng,
           isCluster: true,
           count: props.point_count,
+          clusterGroups,
         };
       }
 

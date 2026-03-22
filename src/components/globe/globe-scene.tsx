@@ -51,6 +51,15 @@ export function GlobeScene({ onLocationClick, restorePov }: GlobeSceneProps) {
     controls.maxDistance = 800;
   }, [restorePov]);
 
+  const navigateToMap = useCallback(
+    (group: LocationGroup, currentPov: PointOfView) => {
+      setTimeout(() => {
+        onLocationClick(group, currentPov);
+      }, CAMERA_TRANSITION_MS + 200);
+    },
+    [onLocationClick],
+  );
+
   const handlePinClick = useCallback(
     (group: LocationGroup) => {
       const globe = globeRef.current;
@@ -68,11 +77,46 @@ export function GlobeScene({ onLocationClick, restorePov }: GlobeSceneProps) {
       );
 
       // アニメーション完了後に画面遷移
-      setTimeout(() => {
-        onLocationClick(group, currentPov);
-      }, CAMERA_TRANSITION_MS + 200);
+      navigateToMap(group, currentPov);
     },
-    [onLocationClick],
+    [navigateToMap],
+  );
+
+  const handleClusterClick = useCallback(
+    (clusterGroups: LocationGroup[], lat: number, lng: number) => {
+      const globe = globeRef.current;
+      if (!globe) {
+        return;
+      }
+
+      const currentPov = globe.pointOfView() as PointOfView;
+      const targetAltitude = Math.min(currentPov.altitude, 1.8);
+      globe.pointOfView(
+        { lat, lng, altitude: targetAltitude },
+        CAMERA_TRANSITION_MS,
+      );
+
+      // クラスター内の全動画を統合した仮想グループを作成
+      const seenVideoIds = new Set<string>();
+      const mergedVideos = clusterGroups
+        .flatMap((g) => g.videos)
+        .filter((v) => {
+          if (seenVideoIds.has(v.videoId)) {
+            return false;
+          }
+          seenVideoIds.add(v.videoId);
+          return true;
+        });
+      const syntheticGroup: LocationGroup = {
+        name: clusterGroups.map((g) => g.name).join('・'),
+        lat,
+        lng,
+        videos: mergedVideos,
+      };
+
+      navigateToMap(syntheticGroup, currentPov);
+    },
+    [navigateToMap],
   );
 
   // altitude 追跡(クラスタリング更新用)
@@ -98,7 +142,9 @@ export function GlobeScene({ onLocationClick, restorePov }: GlobeSceneProps) {
       htmlElement={(d) => {
         const pin = d as (typeof pins)[number];
         if (pin.isCluster) {
-          return createGlobeClusterPin(pin.count);
+          return createGlobeClusterPin(pin.count, () =>
+            handleClusterClick(pin.clusterGroups ?? [], pin.lat, pin.lng),
+          );
         }
 
         // 個別ピン: 最も再生数の多い動画でスタイルを決定

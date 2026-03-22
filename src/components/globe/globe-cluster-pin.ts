@@ -1,5 +1,8 @@
 // クラスタピン(ドロップマーカー型 + 数字)の DOM 要素を生成
-export function createGlobeClusterPin(count: number): HTMLDivElement {
+export function createGlobeClusterPin(
+  count: number,
+  onClick: () => void,
+): HTMLDivElement {
   // マーカーサイズ: クラスタ数に応じて拡大
   const markerW = Math.max(28, Math.min(24 + count * 2, 44));
   const markerH = Math.round(markerW * 1.4);
@@ -52,6 +55,10 @@ export function createGlobeClusterPin(count: number): HTMLDivElement {
   drop.appendChild(label);
   marker.appendChild(drop);
   el.appendChild(marker);
+
+  el.style.cursor = 'pointer';
+  el.style.pointerEvents = 'auto';
+  el.addEventListener('click', onClick);
 
   return el;
 }

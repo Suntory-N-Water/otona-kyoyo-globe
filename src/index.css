@@ -123,15 +123,6 @@
   }
 }
 
-/* Globe ピン パルスアニメーション (opacity でGPU合成) */
-@keyframes globe-pin-pulse {
-  0%, 100% { opacity: 0.75; }
-  50% { opacity: 1; }
-}
-.globe-pin-drop {
-  animation: globe-pin-pulse 2s ease-in-out infinite;
-  will-change: opacity;
-}
 
 /* Leaflet Popup カスタムスタイル */
 @media (max-width: 480px) {

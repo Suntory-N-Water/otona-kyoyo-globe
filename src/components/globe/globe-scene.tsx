@@ -1,8 +1,17 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import type { GlobeMethods } from 'react-globe.gl';
 import Globe from 'react-globe.gl';
-import { createGlobeClusterPin } from '@/components/globe/globe-cluster-pin';
-import { createGlobePin } from '@/components/globe/globe-pin';
+import * as THREE from 'three';
+import { createGlobeClusterPinMesh } from '@/components/globe/globe-cluster-pin-webgl';
+import { createGlobePinMesh } from '@/components/globe/globe-pin-webgl';
+import type { ClusterPin } from '@/hooks/use-clustered-pins';
 import { useClusteredPins } from '@/hooks/use-clustered-pins';
 import { useLocationData } from '@/hooks/use-location-data';
 import {
@@ -25,9 +34,43 @@ type GlobeSceneProps = {
   restorePov?: PointOfView;
 };
 
+// Three.js オブジェクトを再帰的に破棄してGPUメモリを解放
+function disposeObject3D(obj: THREE.Object3D): void {
+  obj.traverse((child) => {
+    if (child instanceof THREE.Mesh) {
+      child.geometry.dispose();
+      if (Array.isArray(child.material)) {
+        for (const m of child.material) {
+          m.dispose();
+        }
+      } else {
+        child.material.dispose();
+      }
+    }
+    if (child instanceof THREE.Sprite) {
+      if (child.material.map) {
+        child.material.map.dispose();
+      }
+      child.material.dispose();
+    }
+  });
+}
+
 export function GlobeScene({ onLocationClick, restorePov }: GlobeSceneProps) {
   const globeRef = useRef<GlobeMethods>(undefined);
   const [altitude, setAltitude] = useState<number>(ITOSHIMA.altitude);
+  const [dimensions, setDimensions] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight,
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setDimensions({ width: window.innerWidth, height: window.innerHeight });
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   const { groups, maxViewCount } = useLocationData();
   const pins = useClusteredPins(groups, altitude);
 
@@ -37,19 +80,29 @@ export function GlobeScene({ onLocationClick, restorePov }: GlobeSceneProps) {
     [],
   );
 
-  // ピンDOM キャッシュ (同一IDのDOMを再利用してズーム時の再生成コストを削減)
-  const pinCacheRef = useRef<Map<string, HTMLElement>>(new Map());
+  // Three.js オブジェクトキャッシュ (ズーム時の再生成とGPUメモリ再確保を削減)
+  const pinMeshCacheRef = useRef<Map<string, THREE.Object3D>>(new Map());
   useEffect(() => {
     const currentIds = new Set(pins.map((p) => p.id));
-    for (const key of pinCacheRef.current.keys()) {
+    const toDispose: [string, THREE.Object3D][] = [];
+    for (const [key, obj] of pinMeshCacheRef.current.entries()) {
       if (!currentIds.has(key)) {
-        pinCacheRef.current.delete(key);
+        // 即時dispose するとreact-globe.glが同フレームに描画してグレー化するため
+        // まず非表示にし、次フレームで GPU リソースを解放する
+        obj.visible = false;
+        toDispose.push([key, obj]);
       }
     }
+    if (toDispose.length > 0) {
+      const raf = requestAnimationFrame(() => {
+        for (const [key, obj] of toDispose) {
+          disposeObject3D(obj);
+          pinMeshCacheRef.current.delete(key);
+        }
+      });
+      return () => cancelAnimationFrame(raf);
+    }
   }, [pins]);
-
-  // ズームデバウンス用タイマー
-  const zoomTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
     const globe = globeRef.current;
@@ -65,7 +118,7 @@ export function GlobeScene({ onLocationClick, restorePov }: GlobeSceneProps) {
     };
     globe.pointOfView(pov, restorePov ? CAMERA_TRANSITION_MS : 0);
 
-    // ズーム範囲を制限 (minDistance=108でほぼ地表近くまで寄れる、101はz-buffer破綻でブラックアウトする)
+    // ズーム範囲を制限 (minDistance=108でほぼ地表近くまで寄れる)
     const controls = globe.controls();
     controls.minDistance = 108;
     controls.maxDistance = 800;
@@ -94,15 +147,12 @@ export function GlobeScene({ onLocationClick, restorePov }: GlobeSceneProps) {
       }
 
       const currentPov = globe.pointOfView() as PointOfView;
-
-      // 現在より引いている場合のみズームイン、既に近い場合はそのまま寄る
       const targetAltitude = Math.min(currentPov.altitude, 0.5);
       globe.pointOfView(
         { lat: group.lat, lng: group.lng, altitude: targetAltitude },
         CAMERA_TRANSITION_MS,
       );
 
-      // アニメーション完了後に画面遷移
       navigateToMap(group, currentPov);
     },
     [navigateToMap],
@@ -122,7 +172,6 @@ export function GlobeScene({ onLocationClick, restorePov }: GlobeSceneProps) {
         CAMERA_TRANSITION_MS,
       );
 
-      // クラスター内の全動画を統合した仮想グループを作成
       const seenVideoIds = new Set<string>();
       const mergedVideos = clusterGroups
         .flatMap((g) => g.videos)
@@ -145,18 +194,32 @@ export function GlobeScene({ onLocationClick, restorePov }: GlobeSceneProps) {
     [navigateToMap],
   );
 
-  // altitude 追跡(クラスタリング更新用) - 50ms デバウンスでstate更新頻度を削減
+  // altitude 追跡(クラスタリング更新用) - startTransition で非緊急更新としてスケジュール
   const handleZoom = useCallback((pov: PointOfView) => {
-    clearTimeout(zoomTimerRef.current);
-    zoomTimerRef.current = setTimeout(() => setAltitude(pov.altitude), 50);
+    startTransition(() => setAltitude(pov.altitude));
   }, []);
+
+  // objectsData のクリックハンドラ: ライブラリがデータアイテムを引数として渡す
+  const handleObjectClick = useCallback(
+    (obj: object) => {
+      const pin = obj as ClusterPin;
+      if (pin.isCluster) {
+        handleClusterClick(pin.clusterGroups ?? [], pin.lat, pin.lng);
+      } else if (pin.group) {
+        handlePinClick(pin.group);
+      }
+    },
+    [handleClusterClick, handlePinClick],
+  );
 
   return (
     <Globe
       ref={globeRef}
+      width={dimensions.width}
+      height={dimensions.height}
       globeImageUrl={GLOBE_TEXTURES.globe}
       bumpImageUrl={isMobile ? undefined : GLOBE_TEXTURES.bump}
-      backgroundImageUrl={GLOBE_TEXTURES.background}
+      backgroundImageUrl={isMobile ? undefined : GLOBE_TEXTURES.background}
       showAtmosphere={!isMobile}
       atmosphereColor={ATMOSPHERE_COLOR}
       atmosphereAltitude={0.2}
@@ -166,51 +229,48 @@ export function GlobeScene({ onLocationClick, restorePov }: GlobeSceneProps) {
         powerPreference: isMobile ? 'low-power' : 'high-performance',
       }}
       onZoom={handleZoom}
-      htmlElementsData={pins}
-      htmlLat='lat'
-      htmlLng='lng'
-      htmlAltitude={0.01}
-      htmlElement={(d) => {
-        const pin = d as (typeof pins)[number];
+      objectsData={pins}
+      objectLat='lat'
+      objectLng='lng'
+      objectAltitude={0.01}
+      objectFacesSurfaces={true}
+      objectThreeObject={(d) => {
+        const pin = d as ClusterPin;
 
-        // キャッシュヒット時は既存DOMを返す
-        const cached = pinCacheRef.current.get(pin.id);
+        // キャッシュヒット時は既存オブジェクトを返す
+        const cached = pinMeshCacheRef.current.get(pin.id);
         if (cached) {
           return cached;
         }
 
-        let el: HTMLElement;
+        let obj: THREE.Object3D;
         if (pin.isCluster) {
-          el = createGlobeClusterPin(pin.count, () =>
-            handleClusterClick(pin.clusterGroups ?? [], pin.lat, pin.lng),
-          );
+          obj = createGlobeClusterPinMesh(pin.count);
+          // クラスターは個別ピンより常に手前に描画 (Z順のちらつき防止)
+          obj.renderOrder = 10 + pin.count;
         } else {
-          // 個別ピン: 最も再生数の多い動画でスタイルを決定
           const group = pin.group;
           if (!group) {
-            return document.createElement('div');
+            return new THREE.Object3D();
           }
-
           const topVideo = group.videos.reduce((a, b) =>
             a.viewCount > b.viewCount ? a : b,
           );
           const size = pinSize(topVideo.viewCount, maxViewCount);
           const brightness = pinBrightness(topVideo.publishedAt);
-
-          el = createGlobePin(
-            size,
-            brightness,
-            () => handlePinClick(group),
-            group.name,
-          );
+          obj = createGlobePinMesh(size, brightness);
+          // 再生数が多いピンを手前に描画して安定させる
+          obj.renderOrder = Math.round(size);
         }
 
-        pinCacheRef.current.set(pin.id, el);
-        return el;
+        pinMeshCacheRef.current.set(pin.id, obj);
+        return obj;
       }}
-      htmlElementVisibilityModifier={(el: HTMLElement, isVisible: boolean) => {
-        el.style.opacity = isVisible ? '1' : '0';
+      objectLabel={(d) => {
+        const pin = d as ClusterPin;
+        return pin.isCluster ? '' : (pin.group?.name ?? '');
       }}
+      onObjectClick={handleObjectClick}
     />
   );
 }

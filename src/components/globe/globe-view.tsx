@@ -9,7 +9,7 @@ type GlobeViewProps = {
 
 export function GlobeView({ onLocationClick, restorePov }: GlobeViewProps) {
   return (
-    <div className='fixed inset-0'>
+    <div className='fixed inset-0' style={{ touchAction: 'none' }}>
       <GlobeScene onLocationClick={onLocationClick} restorePov={restorePov} />
     </div>
   );

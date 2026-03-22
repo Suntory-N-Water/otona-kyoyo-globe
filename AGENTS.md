@@ -33,4 +33,4 @@ bun run pipeline:validate  # バリデーション + マージ → src/data/loca
 - Biome でフォーマット・リント(`biome.jsonc`)。`type` を使う(`interface` ではない)。`any` 禁止
 - GitHub の情報取得には `gh` コマンドを使用する
 - ライブラリの仕様は`Context7` MCP で確認すること
-- GitHub Actions ワークフロー更新時は `actions-check` Skills で静的解析を実施する
+- GitHub Actions ワークフロー更新時は `general-dev-skills:actions-check` Skills で静的解析を実施する

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { GlobeMethods } from 'react-globe.gl';
 import Globe from 'react-globe.gl';
 import { createGlobeClusterPin } from '@/components/globe/globe-cluster-pin';
@@ -31,6 +31,26 @@ export function GlobeScene({ onLocationClick, restorePov }: GlobeSceneProps) {
   const { groups, maxViewCount } = useLocationData();
   const pins = useClusteredPins(groups, altitude);
 
+  // タッチデバイス判定 (モバイル向け軽量モード)
+  const isMobile = useMemo(
+    () => window.matchMedia('(pointer: coarse)').matches,
+    [],
+  );
+
+  // ピンDOM キャッシュ (同一IDのDOMを再利用してズーム時の再生成コストを削減)
+  const pinCacheRef = useRef<Map<string, HTMLElement>>(new Map());
+  useEffect(() => {
+    const currentIds = new Set(pins.map((p) => p.id));
+    for (const key of pinCacheRef.current.keys()) {
+      if (!currentIds.has(key)) {
+        pinCacheRef.current.delete(key);
+      }
+    }
+  }, [pins]);
+
+  // ズームデバウンス用タイマー
+  const zoomTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
   useEffect(() => {
     const globe = globeRef.current;
     if (!globe) {
@@ -45,11 +65,17 @@ export function GlobeScene({ onLocationClick, restorePov }: GlobeSceneProps) {
     };
     globe.pointOfView(pov, restorePov ? CAMERA_TRANSITION_MS : 0);
 
-    // ズーム範囲を制限
+    // ズーム範囲を制限 (minDistance=108でほぼ地表近くまで寄れる、101はz-buffer破綻でブラックアウトする)
     const controls = globe.controls();
-    controls.minDistance = 120;
+    controls.minDistance = 108;
     controls.maxDistance = 800;
-  }, [restorePov]);
+
+    // モバイルでpixelRatioを制限してGPU描画負荷を削減 (Retina=3xを1.5xに抑える)
+    if (isMobile) {
+      const renderer = globe.renderer();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+    }
+  }, [restorePov, isMobile]);
 
   const navigateToMap = useCallback(
     (group: LocationGroup, currentPov: PointOfView) => {
@@ -70,7 +96,7 @@ export function GlobeScene({ onLocationClick, restorePov }: GlobeSceneProps) {
       const currentPov = globe.pointOfView() as PointOfView;
 
       // 現在より引いている場合のみズームイン、既に近い場合はそのまま寄る
-      const targetAltitude = Math.min(currentPov.altitude, 1.8);
+      const targetAltitude = Math.min(currentPov.altitude, 0.5);
       globe.pointOfView(
         { lat: group.lat, lng: group.lng, altitude: targetAltitude },
         CAMERA_TRANSITION_MS,
@@ -90,7 +116,7 @@ export function GlobeScene({ onLocationClick, restorePov }: GlobeSceneProps) {
       }
 
       const currentPov = globe.pointOfView() as PointOfView;
-      const targetAltitude = Math.min(currentPov.altitude, 1.8);
+      const targetAltitude = Math.min(currentPov.altitude, 0.5);
       globe.pointOfView(
         { lat, lng, altitude: targetAltitude },
         CAMERA_TRANSITION_MS,
@@ -119,21 +145,26 @@ export function GlobeScene({ onLocationClick, restorePov }: GlobeSceneProps) {
     [navigateToMap],
   );
 
-  // altitude 追跡(クラスタリング更新用)
+  // altitude 追跡(クラスタリング更新用) - 50ms デバウンスでstate更新頻度を削減
   const handleZoom = useCallback((pov: PointOfView) => {
-    setAltitude(pov.altitude);
+    clearTimeout(zoomTimerRef.current);
+    zoomTimerRef.current = setTimeout(() => setAltitude(pov.altitude), 50);
   }, []);
 
   return (
     <Globe
       ref={globeRef}
       globeImageUrl={GLOBE_TEXTURES.globe}
-      bumpImageUrl={GLOBE_TEXTURES.bump}
+      bumpImageUrl={isMobile ? undefined : GLOBE_TEXTURES.bump}
       backgroundImageUrl={GLOBE_TEXTURES.background}
-      showAtmosphere={true}
+      showAtmosphere={!isMobile}
       atmosphereColor={ATMOSPHERE_COLOR}
       atmosphereAltitude={0.2}
       animateIn={false}
+      rendererConfig={{
+        antialias: !isMobile,
+        powerPreference: isMobile ? 'low-power' : 'high-performance',
+      }}
       onZoom={handleZoom}
       htmlElementsData={pins}
       htmlLat='lat'
@@ -141,30 +172,41 @@ export function GlobeScene({ onLocationClick, restorePov }: GlobeSceneProps) {
       htmlAltitude={0.01}
       htmlElement={(d) => {
         const pin = d as (typeof pins)[number];
+
+        // キャッシュヒット時は既存DOMを返す
+        const cached = pinCacheRef.current.get(pin.id);
+        if (cached) {
+          return cached;
+        }
+
+        let el: HTMLElement;
         if (pin.isCluster) {
-          return createGlobeClusterPin(pin.count, () =>
+          el = createGlobeClusterPin(pin.count, () =>
             handleClusterClick(pin.clusterGroups ?? [], pin.lat, pin.lng),
+          );
+        } else {
+          // 個別ピン: 最も再生数の多い動画でスタイルを決定
+          const group = pin.group;
+          if (!group) {
+            return document.createElement('div');
+          }
+
+          const topVideo = group.videos.reduce((a, b) =>
+            a.viewCount > b.viewCount ? a : b,
+          );
+          const size = pinSize(topVideo.viewCount, maxViewCount);
+          const brightness = pinBrightness(topVideo.publishedAt);
+
+          el = createGlobePin(
+            size,
+            brightness,
+            () => handlePinClick(group),
+            group.name,
           );
         }
 
-        // 個別ピン: 最も再生数の多い動画でスタイルを決定
-        const group = pin.group;
-        if (!group) {
-          return document.createElement('div');
-        }
-
-        const topVideo = group.videos.reduce((a, b) =>
-          a.viewCount > b.viewCount ? a : b,
-        );
-        const size = pinSize(topVideo.viewCount, maxViewCount);
-        const brightness = pinBrightness(topVideo.publishedAt);
-
-        return createGlobePin(
-          size,
-          brightness,
-          () => handlePinClick(group),
-          group.name,
-        );
+        pinCacheRef.current.set(pin.id, el);
+        return el;
       }}
       htmlElementVisibilityModifier={(el: HTMLElement, isVisible: boolean) => {
         el.style.opacity = isVisible ? '1' : '0';

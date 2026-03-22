@@ -37,8 +37,10 @@ export function useClusteredPins(groups: LocationGroup[], altitude: number) {
     return cluster;
   }, [groups]);
 
+  // zoom は整数なので altitude が細かく変化しても zoom が変わらなければ再計算しない
+  const zoom = useMemo(() => altitudeToZoom(altitude), [altitude]);
+
   const pins = useMemo(() => {
-    const zoom = altitudeToZoom(altitude);
     const clusters = index.getClusters([-180, -90, 180, 90], zoom);
 
     return clusters.map((feature): ClusterPin => {
@@ -75,7 +77,7 @@ export function useClusteredPins(groups: LocationGroup[], altitude: number) {
         group: groups[groupIndex],
       };
     });
-  }, [index, groups, altitude]);
+  }, [index, groups, zoom]);
 
   return pins;
 }

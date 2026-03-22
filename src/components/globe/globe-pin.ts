@@ -42,6 +42,8 @@ export function createGlobePin(
   drop.style.position = 'absolute';
   drop.style.top = '0';
   drop.style.left = '0';
+  // パルスアニメーション: CSS keyframes で opacity を使いGPU合成に乗せる
+  drop.className = 'globe-pin-drop';
 
   // 白いコア(中央の円)
   const core = document.createElement('div');
@@ -58,24 +60,6 @@ export function createGlobePin(
 
   drop.appendChild(core);
   marker.appendChild(drop);
-
-  // パルスアニメーション(グロー明滅)
-  drop.animate(
-    [
-      {
-        boxShadow: `0 0 ${markerW * 0.8}px rgba(245,158,11,${alpha * 0.6}), 0 2px 4px rgba(0,0,0,0.3)`,
-      },
-      {
-        boxShadow: `0 0 ${markerW * 1.6}px rgba(245,158,11,${alpha * 0.4}), 0 2px 4px rgba(0,0,0,0.3)`,
-      },
-    ],
-    {
-      duration: 2000,
-      iterations: Number.POSITIVE_INFINITY,
-      direction: 'alternate',
-      easing: 'ease-in-out',
-    },
-  );
 
   // ホバーツールチップ(場所名)
   let tooltip: HTMLDivElement | null = null;

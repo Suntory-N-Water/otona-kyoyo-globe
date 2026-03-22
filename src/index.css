@@ -123,7 +123,23 @@
   }
 }
 
+/* Globe ピン パルスアニメーション (opacity でGPU合成) */
+@keyframes globe-pin-pulse {
+  0%, 100% { opacity: 0.75; }
+  50% { opacity: 1; }
+}
+.globe-pin-drop {
+  animation: globe-pin-pulse 2s ease-in-out infinite;
+  will-change: opacity;
+}
+
 /* Leaflet Popup カスタムスタイル */
+@media (max-width: 480px) {
+  .leaflet-popup,
+  .leaflet-popup-content-wrapper {
+    max-width: calc(100vw - 32px) !important;
+  }
+}
 .leaflet-popup-content-wrapper {
   background: #1a1f2e !important;
   backdrop-filter: blur(8px);

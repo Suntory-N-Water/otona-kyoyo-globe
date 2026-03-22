@@ -27,7 +27,7 @@ export function MapPin({ group }: MapPinProps) {
         mouseover: () => markerRef.current?.openPopup(),
       }}
     >
-      <Popup maxWidth={320} minWidth={300}>
+      <Popup maxWidth={300} minWidth={220}>
         <div>
           <h3
             style={{
@@ -35,6 +35,8 @@ export function MapPin({ group }: MapPinProps) {
               fontSize: '14px',
               fontWeight: 'bold',
               color: 'white',
+              overflowWrap: 'break-word',
+              wordBreak: 'break-word',
             }}
           >
             {group.name}

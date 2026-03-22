@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 // ディレクトリ
 const PIPELINE_DIR = dirname(fileURLToPath(import.meta.url));
 export const PROJECT_ROOT = resolve(PIPELINE_DIR, '../..');
-export const TMP_DIR = resolve(PIPELINE_DIR, 'tmp');
+export const REGISTRY_DIR = resolve(PIPELINE_DIR, 'registry');
 export const OUTPUT_PATH = resolve(PROJECT_ROOT, 'src/data/locations.json');
 
 // 中間ファイル

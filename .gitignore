@@ -27,5 +27,3 @@ dist-ssr
 .env
 !.env.example
 
-# パイプライン中間ファイル
-src/pipeline/tmp/

@@ -9,7 +9,7 @@ import {
   EXTRACTED_LOCATIONS_PATH,
   GEMINI_API_KEY,
   NEW_VIDEOS_PATH,
-  TMP_DIR,
+  REGISTRY_DIR,
 } from './config.ts';
 
 const SYSTEM_PROMPT = `# 思考のレンズ
@@ -196,7 +196,7 @@ async function main() {
     process.exit(1);
   }
 
-  await mkdir(TMP_DIR, { recursive: true });
+  await mkdir(REGISTRY_DIR, { recursive: true });
 
   const videos: VideoInput[] = JSON.parse(
     await readFile(NEW_VIDEOS_PATH, 'utf-8'),

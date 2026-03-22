@@ -2,7 +2,11 @@
 
 import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { GEOCODED_LOCATIONS_PATH, OUTPUT_PATH, TMP_DIR } from './config.ts';
+import {
+  GEOCODED_LOCATIONS_PATH,
+  OUTPUT_PATH,
+  REGISTRY_DIR,
+} from './config.ts';
 
 type LocationData = {
   id: string;
@@ -82,7 +86,7 @@ async function main() {
     process.exit(1);
   }
 
-  await mkdir(TMP_DIR, { recursive: true });
+  await mkdir(REGISTRY_DIR, { recursive: true });
 
   const newVideos: VideoData[] = JSON.parse(
     await readFile(GEOCODED_LOCATIONS_PATH, 'utf-8'),

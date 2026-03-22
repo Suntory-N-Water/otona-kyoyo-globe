@@ -12,7 +12,7 @@ import {
   GOOGLE_API_KEY,
   NOMINATIM_RATE_LIMIT_MS,
   NOMINATIM_USER_AGENT,
-  TMP_DIR,
+  REGISTRY_DIR,
 } from './config.ts';
 
 type GeoResult = {
@@ -195,7 +195,7 @@ async function main() {
     process.exit(1);
   }
 
-  await mkdir(TMP_DIR, { recursive: true });
+  await mkdir(REGISTRY_DIR, { recursive: true });
 
   const videos: ExtractedVideo[] = JSON.parse(
     await readFile(EXTRACTED_LOCATIONS_PATH, 'utf-8'),

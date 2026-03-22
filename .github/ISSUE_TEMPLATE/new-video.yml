@@ -1,0 +1,11 @@
+name: 新規動画
+description: パイプライン未処理の新規動画を登録する
+labels: []
+body:
+  - type: input
+    id: video_url
+    attributes:
+      label: 動画URL
+      placeholder: "https://www.youtube.com/watch?v=XXXXXXXXXXX"
+    validations:
+      required: true

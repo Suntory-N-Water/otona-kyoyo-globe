@@ -1,4 +1,8 @@
 {
+  "env": {
+    "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1",
+    "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1"
+  },
   "permissions": {
     "allow": [
       "mcp__serena",
@@ -105,8 +109,7 @@
     "command": "node ~/.claude/scripts/statusline.js"
   },
   "plansDirectory": ".claude/plans",
-  "env": {
-    "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1",
-    "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1"
+  "enabledPlugins": {
+    "general-dev-skills@suntory-n-water-marketplace": true
   }
 }

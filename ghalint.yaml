@@ -1,0 +1,6 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/suzuki-shunsuke/ghalint/main/json-schema/ghalint.json
+
+excludes:
+  - policy_name: checkout_persist_credentials_should_be_false
+    workflow_file_path: .github/workflows/run-pipeline.yml
+    job_name: run-pipeline

@@ -16,11 +16,13 @@
     "type-check": "tsc --noEmit",
     "type-check:ai": "tsc --noEmit --pretty false",
     "ai-check": "bun run format && bun run lint:ai && bun run type-check:ai",
+    "pipeline:list": "bun run src/pipeline/list-channel-videos.ts",
     "pipeline:fetch": "bun run src/pipeline/fetch-videos.ts",
     "pipeline:extract": "bun run src/pipeline/extract-locations.ts",
     "pipeline:geocode": "bun run src/pipeline/geocode.ts",
     "pipeline:validate": "bun run src/pipeline/validate-and-merge.ts",
-    "pipeline": "bun run pipeline:fetch && bun run pipeline:extract && bun run pipeline:geocode && bun run pipeline:validate"
+    "pipeline": "bun run pipeline:fetch && bun run pipeline:extract && bun run pipeline:geocode && bun run pipeline:validate",
+    "pipeline:batch": "bun run src/pipeline/run-batch.ts"
   },
   "dependencies": {
     "@google/genai": "^1.46.0",
@@ -40,6 +42,7 @@
   "devDependencies": {
     "@biomejs/biome": "2.4.8",
     "@tailwindcss/vite": "^4.2.2",
+    "@types/bun": "^1.3.11",
     "@types/leaflet": "^1.9.21",
     "@types/node": "^25.5.0",
     "@types/react": "^19.2.14",

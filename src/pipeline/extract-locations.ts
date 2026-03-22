@@ -4,13 +4,13 @@
 
 import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { GoogleGenAI } from '@google/genai';
 import {
   EXTRACTED_LOCATIONS_PATH,
   GEMINI_API_KEY,
   NEW_VIDEOS_PATH,
   REGISTRY_DIR,
 } from './config.ts';
+import { generateText } from './gemini-client.ts';
 
 const SYSTEM_PROMPT = `# 思考のレンズ
 
@@ -126,32 +126,13 @@ function buildUserPrompt(video: VideoInput): string {
   return parts.join('\n');
 }
 
-const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-
 /** Gemini API を呼び出して地名を抽出する */
 async function callLlm(
   systemPrompt: string,
   userPrompt: string,
 ): Promise<string> {
-  const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
-    contents: userPrompt,
-    config: {
-      systemInstruction: systemPrompt,
-      maxOutputTokens: 1024,
-      thinkingConfig: { thinkingBudget: 0 },
-    },
-  });
-
-  // トークン使用量を監視
-  const usage = response.usageMetadata;
-  if (usage) {
-    console.log(
-      `[extract] トークン: 入力=${usage.promptTokenCount ?? 0} 出力=${usage.candidatesTokenCount ?? 0}`,
-    );
-  }
-
-  return response.text ?? '';
+  const result = await generateText(systemPrompt, userPrompt);
+  return result.text;
 }
 
 /** LLMの応答からJSON配列を抽出する */

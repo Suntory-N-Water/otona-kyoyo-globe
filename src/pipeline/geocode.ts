@@ -270,9 +270,21 @@ async function main() {
     };
   });
 
+  // 既存データとマージ(同一 videoId は上書き更新)
+  const existingData: typeof results = existsSync(GEOCODED_LOCATIONS_PATH)
+    ? JSON.parse(await readFile(GEOCODED_LOCATIONS_PATH, 'utf-8'))
+    : [];
+  const videoMap = new Map(existingData.map((v) => [v.videoId, v]));
+  for (const video of results) {
+    videoMap.set(video.videoId, video);
+  }
+  const merged = [...videoMap.values()].sort((a, b) =>
+    (b.publishedAt ?? '').localeCompare(a.publishedAt ?? ''),
+  );
+
   await writeFile(
     GEOCODED_LOCATIONS_PATH,
-    JSON.stringify(results, null, 2),
+    JSON.stringify(merged, null, 2),
     'utf-8',
   );
 

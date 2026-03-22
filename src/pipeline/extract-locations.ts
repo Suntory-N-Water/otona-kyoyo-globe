@@ -238,9 +238,21 @@ async function main() {
     });
   }
 
+  // 既存データとマージ(同一 videoId は上書き更新)
+  const existingData: typeof results = existsSync(EXTRACTED_LOCATIONS_PATH)
+    ? JSON.parse(await readFile(EXTRACTED_LOCATIONS_PATH, 'utf-8'))
+    : [];
+  const videoMap = new Map(existingData.map((v) => [v.videoId, v]));
+  for (const video of results) {
+    videoMap.set(video.videoId, video);
+  }
+  const merged = [...videoMap.values()].sort((a, b) =>
+    (b.publishedAt ?? '').localeCompare(a.publishedAt ?? ''),
+  );
+
   await writeFile(
     EXTRACTED_LOCATIONS_PATH,
-    JSON.stringify(results, null, 2),
+    JSON.stringify(merged, null, 2),
     'utf-8',
   );
 
@@ -249,7 +261,7 @@ async function main() {
     0,
   );
   console.log(
-    `[extract] 完了: ${totalLocations}件の地名を抽出 → ${EXTRACTED_LOCATIONS_PATH}`,
+    `[extract] 完了: ${totalLocations}件の地名を抽出 → ${EXTRACTED_LOCATIONS_PATH} (累計${merged.length}本)`,
   );
 }
 

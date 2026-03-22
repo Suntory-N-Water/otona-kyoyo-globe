@@ -9,7 +9,8 @@
  *   bun run src/pipeline/fetch-videos.ts "https://www.youtube.com/watch?v=clFtrDq0FoA"
  */
 
-import { mkdir, writeFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { chromium } from 'playwright';
 import { GOOGLE_API_KEY, NEW_VIDEOS_PATH, REGISTRY_DIR } from './config.ts';
 import { parseVideoId } from './youtube.ts';
@@ -173,11 +174,23 @@ async function main() {
     transcript: transcripts.get(video.videoId) ?? null,
   }));
 
-  await writeFile(NEW_VIDEOS_PATH, JSON.stringify(results, null, 2), 'utf-8');
+  // 既存データとマージ(同一 videoId は上書き更新)
+  const existing: VideoMeta[] = existsSync(NEW_VIDEOS_PATH)
+    ? JSON.parse(await readFile(NEW_VIDEOS_PATH, 'utf-8'))
+    : [];
+  const videoMap = new Map(existing.map((v) => [v.videoId, v]));
+  for (const video of results) {
+    videoMap.set(video.videoId, video);
+  }
+  const merged = [...videoMap.values()].sort((a, b) =>
+    (b.publishedAt ?? '').localeCompare(a.publishedAt ?? ''),
+  );
+
+  await writeFile(NEW_VIDEOS_PATH, JSON.stringify(merged, null, 2), 'utf-8');
 
   const transcriptCount = results.filter((v) => v.transcript).length;
   console.log(
-    `[fetch] 完了: ${transcriptCount}/${results.length}本の字幕を取得 → ${NEW_VIDEOS_PATH}`,
+    `[fetch] 完了: ${transcriptCount}/${results.length}本の字幕を取得 → ${NEW_VIDEOS_PATH} (累計${merged.length}本)`,
   );
 }
 

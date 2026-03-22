@@ -45,6 +45,5 @@
     "**/.next": true,
     "**/coverage": true
   },
-  "typescript.tsserver.log": "off",
-  "python.defaultInterpreterPath": "./scripts/.venv/bin/python"
+  "typescript.tsserver.log": "off"
 }

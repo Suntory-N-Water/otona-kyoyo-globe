@@ -71,6 +71,10 @@
           {
             "type": "command",
             "command": "bun run --silent -i ~/.claude/scripts/typescript/fix-brackets.ts"
+          },
+          {
+            "type": "command",
+            "command": "afplay /System/Library/Sounds/Glass.aiff"
           }
         ]
       }
@@ -102,6 +106,7 @@
   },
   "plansDirectory": ".claude/plans",
   "env": {
-    "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1"
+    "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1",
+    "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1"
   }
 }

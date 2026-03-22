@@ -159,7 +159,12 @@ export function GlobeScene({ onLocationClick, restorePov }: GlobeSceneProps) {
         const size = pinSize(topVideo.viewCount, maxViewCount);
         const brightness = pinBrightness(topVideo.publishedAt);
 
-        return createGlobePin(size, brightness, () => handlePinClick(group));
+        return createGlobePin(
+          size,
+          brightness,
+          () => handlePinClick(group),
+          group.name,
+        );
       }}
       htmlElementVisibilityModifier={(el: HTMLElement, isVisible: boolean) => {
         el.style.opacity = isVisible ? '1' : '0';

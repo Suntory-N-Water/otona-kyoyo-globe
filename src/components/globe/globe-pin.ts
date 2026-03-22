@@ -3,6 +3,7 @@ export function createGlobePin(
   size: number,
   brightness: number,
   onClick: () => void,
+  name?: string,
 ): HTMLDivElement {
   const alpha = brightness;
   // マーカーのサイズ: size をベースに幅と高さを決定
@@ -76,11 +77,42 @@ export function createGlobePin(
     },
   );
 
+  // ホバーツールチップ(場所名)
+  let tooltip: HTMLDivElement | null = null;
+  if (name) {
+    tooltip = document.createElement('div');
+    tooltip.textContent = name;
+    tooltip.style.position = 'absolute';
+    tooltip.style.bottom = `${touchSize + 4}px`;
+    tooltip.style.left = '50%';
+    tooltip.style.transform = 'translateX(-50%)';
+    tooltip.style.background = 'rgba(0,0,0,0.8)';
+    tooltip.style.color = 'white';
+    tooltip.style.fontSize = '11px';
+    tooltip.style.fontWeight = '600';
+    tooltip.style.padding = '3px 8px';
+    tooltip.style.borderRadius = '6px';
+    tooltip.style.whiteSpace = 'nowrap';
+    tooltip.style.pointerEvents = 'none';
+    tooltip.style.opacity = '0';
+    tooltip.style.transition = 'opacity 150ms';
+    tooltip.style.backdropFilter = 'blur(4px)';
+    tooltip.style.border = '1px solid rgba(255,255,255,0.15)';
+    el.style.position = 'relative';
+    el.appendChild(tooltip);
+  }
+
   el.addEventListener('mouseenter', () => {
     marker.style.filter = 'brightness(1.3)';
+    if (tooltip) {
+      tooltip.style.opacity = '1';
+    }
   });
   el.addEventListener('mouseleave', () => {
     marker.style.filter = '';
+    if (tooltip) {
+      tooltip.style.opacity = '0';
+    }
   });
   el.addEventListener('click', onClick);
 

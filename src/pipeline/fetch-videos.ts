@@ -11,7 +11,8 @@
 
 import { mkdir, writeFile } from 'node:fs/promises';
 import { chromium } from 'playwright';
-import { GOOGLE_API_KEY, NEW_VIDEOS_PATH, TMP_DIR } from './config.ts';
+import { GOOGLE_API_KEY, NEW_VIDEOS_PATH, REGISTRY_DIR } from './config.ts';
+import { parseVideoId } from './youtube.ts';
 
 type VideoMeta = {
   videoId: string;
@@ -21,30 +22,6 @@ type VideoMeta = {
   viewCount: number;
   transcript: string | null;
 };
-
-/** URLまたは動画IDから動画IDを抽出する */
-function parseVideoId(urlOrId: string): string {
-  // youtube.com/watch?v=ID 形式
-  const watchMatch = urlOrId.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
-  if (watchMatch) {
-    return watchMatch[1];
-  }
-
-  // youtu.be/ID 形式
-  const shortMatch = urlOrId.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
-  if (shortMatch) {
-    return shortMatch[1];
-  }
-
-  // そのままIDとして扱う
-  const stripped = urlOrId.trim();
-  if (/^[a-zA-Z0-9_-]{11}$/.test(stripped)) {
-    return stripped;
-  }
-
-  console.error(`エラー: 動画IDを認識できません: ${urlOrId}`);
-  process.exit(1);
-}
 
 /** YouTube Data API v3 で動画メタデータを一括取得する(50件ずつ) */
 async function fetchVideoDetails(
@@ -177,7 +154,7 @@ async function main() {
     process.exit(1);
   }
 
-  await mkdir(TMP_DIR, { recursive: true });
+  await mkdir(REGISTRY_DIR, { recursive: true });
 
   const videoIds = args.map(parseVideoId);
   console.log(`[fetch] 対象動画: ${videoIds.join(', ')}`);

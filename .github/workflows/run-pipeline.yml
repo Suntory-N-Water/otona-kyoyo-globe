@@ -20,6 +20,7 @@ jobs:
     timeout-minutes: 30
     permissions:
       contents: write
+      issues: write
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -60,3 +61,9 @@ jobs:
           git add src/pipeline/registry/ src/data/locations.json
           git diff --staged --quiet || git commit -m "feat: パイプライン実行 (Issue #${ISSUE_NUMBER})"
           git push
+
+      - name: Issueをクローズ
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"

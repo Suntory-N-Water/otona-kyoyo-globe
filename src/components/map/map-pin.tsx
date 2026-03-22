@@ -3,12 +3,12 @@ import { useRef } from 'react';
 import { Marker, Popup } from 'react-leaflet';
 import type { LocationGroup } from '@/types/location';
 
-// アンバーカラーのピンアイコン
+// アンバーカラーのピンアイコン(ティアドロップ型)
 const pinIcon = L.divIcon({
   className: '',
-  html: '<div style="width:14px;height:14px;border-radius:50%;background:rgba(245,158,11,0.9);border:2px solid white;box-shadow:0 0 8px rgba(245,158,11,0.5);"></div>',
+  html: `<div style="width:14px;height:14px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:linear-gradient(135deg,rgba(251,191,36,0.95),rgba(245,158,11,0.9));border:2px solid rgba(255,255,255,0.8);box-shadow:0 0 8px rgba(245,158,11,0.6);"></div>`,
   iconSize: [14, 14],
-  iconAnchor: [7, 7],
+  iconAnchor: [7, 14],
 });
 
 type MapPinProps = {
@@ -27,34 +27,25 @@ export function MapPin({ group }: MapPinProps) {
         mouseover: () => markerRef.current?.openPopup(),
       }}
     >
-      <Popup maxWidth={320} minWidth={280}>
+      <Popup maxWidth={320} minWidth={300}>
         <div>
           <h3
             style={{
-              margin: '0 0 8px',
+              margin: '0 0 10px',
               fontSize: '14px',
               fontWeight: 'bold',
+              color: 'white',
             }}
           >
             {group.name}
-            <span
-              style={{
-                marginLeft: '8px',
-                fontSize: '12px',
-                opacity: 0.7,
-                fontWeight: 'normal',
-              }}
-            >
-              {group.videos.length}本
-            </span>
           </h3>
           <div
             style={{
-              maxHeight: '300px',
+              maxHeight: '320px',
               overflowY: 'auto',
               display: 'flex',
               flexDirection: 'column',
-              gap: '8px',
+              gap: '6px',
             }}
           >
             {group.videos.map((video) => (
@@ -73,7 +64,7 @@ export function MapPin({ group }: MapPinProps) {
                   transition: 'background 200ms',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background = 'transparent';
@@ -83,8 +74,8 @@ export function MapPin({ group }: MapPinProps) {
                   src={video.thumbnailUrl}
                   alt=''
                   style={{
-                    width: '100px',
-                    height: '56px',
+                    width: '88px',
+                    height: '50px',
                     borderRadius: '6px',
                     objectFit: 'cover',
                     flexShrink: 0,
@@ -96,7 +87,8 @@ export function MapPin({ group }: MapPinProps) {
                     style={{
                       margin: 0,
                       fontSize: '12px',
-                      lineHeight: 1.3,
+                      lineHeight: 1.4,
+                      color: 'white',
                       display: '-webkit-box',
                       WebkitLineClamp: 2,
                       WebkitBoxOrient: 'vertical',
@@ -107,9 +99,9 @@ export function MapPin({ group }: MapPinProps) {
                   </p>
                   <p
                     style={{
-                      margin: '4px 0 0',
+                      margin: '3px 0 0',
                       fontSize: '11px',
-                      opacity: 0.6,
+                      color: 'rgba(255,255,255,0.7)',
                     }}
                   >
                     {video.viewCount >= 10000

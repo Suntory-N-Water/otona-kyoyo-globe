@@ -123,24 +123,27 @@
   }
 }
 
-/* Leaflet Popup カスタムスタイル(ダークテーマ) */
+/* Leaflet Popup カスタムスタイル */
 .leaflet-popup-content-wrapper {
-  background: rgba(15, 23, 42, 0.92) !important;
+  background: #1a1f2e !important;
   backdrop-filter: blur(8px);
   border-radius: 12px !important;
   color: white !important;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5) !important;
 }
 .leaflet-popup-tip {
-  background: rgba(15, 23, 42, 0.92) !important;
+  background: #1a1f2e !important;
 }
 .leaflet-popup-close-button {
-  color: rgba(255, 255, 255, 0.6) !important;
+  top: 8px !important;
+  right: 8px !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+  font-size: 18px !important;
 }
 .leaflet-popup-close-button:hover {
   color: white !important;
 }
 .leaflet-popup-content {
-  margin: 12px !important;
+  margin: 14px !important;
 }

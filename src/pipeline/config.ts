@@ -10,13 +10,13 @@ export const REGISTRY_DIR = resolve(PIPELINE_DIR, 'registry');
 export const OUTPUT_PATH = resolve(PROJECT_ROOT, 'src/data/locations.json');
 
 // 中間ファイル
-export const NEW_VIDEOS_PATH = resolve(TMP_DIR, 'new_videos.json');
+export const NEW_VIDEOS_PATH = resolve(REGISTRY_DIR, 'new_videos.json');
 export const EXTRACTED_LOCATIONS_PATH = resolve(
-  TMP_DIR,
+  REGISTRY_DIR,
   'extracted_locations.json',
 );
 export const GEOCODED_LOCATIONS_PATH = resolve(
-  TMP_DIR,
+  REGISTRY_DIR,
   'geocoded_locations.json',
 );
 

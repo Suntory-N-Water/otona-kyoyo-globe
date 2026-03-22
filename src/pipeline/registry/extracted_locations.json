@@ -88,5 +88,38 @@
         "lng": 120.373
       }
     ]
+  },
+  {
+    "videoId": "CVphZOjM-Yc",
+    "title": "【ポートアイランド】世界最大の人工島はなぜ衰退したのか",
+    "thumbnailUrl": "https://i.ytimg.com/vi/CVphZOjM-Yc/mqdefault.jpg",
+    "publishedAt": "2025-08-08T11:00:32Z",
+    "viewCount": 482906,
+    "extractedLocations": [
+      {
+        "name": "ポートアイランド",
+        "region": "兵庫県神戸市",
+        "lat": 34.6644,
+        "lng": 135.2167
+      },
+      {
+        "name": "ワールド 本社ビル",
+        "region": "兵庫県神戸市中央区港島中町",
+        "lat": 34.6657,
+        "lng": 135.2152
+      },
+      {
+        "name": "アシックス 本社",
+        "region": "兵庫県神戸市中央区港島中町",
+        "lat": 34.6641,
+        "lng": 135.2104
+      },
+      {
+        "name": "神戸学院大学 ポートアイランドキャンパス",
+        "region": "兵庫県神戸市中央区港島",
+        "lat": 34.6653,
+        "lng": 135.2061
+      }
+    ]
   }
 ]

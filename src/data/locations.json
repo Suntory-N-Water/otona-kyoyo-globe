@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-22T01:14:36Z",
+  "generatedAt": "2026-03-22T01:33:54Z",
   "videos": [
     {
       "videoId": "y84SANaBmHE",
@@ -24,11 +24,11 @@
           "id": "y84SANaBmHE-2",
           "name": "明洞",
           "lat": 37.5635,
-          "lng": 126.9815
+          "lng": 126.9846
         },
         {
           "id": "y84SANaBmHE-3",
-          "name": "韓国国会議事堂",
+          "name": "国会議事堂",
           "lat": 37.5318,
           "lng": 126.9142
         },
@@ -36,19 +36,19 @@
           "id": "y84SANaBmHE-4",
           "name": "サムスンデジタルシティ",
           "lat": 37.2575,
-          "lng": 127.0536
+          "lng": 127.0544
         },
         {
           "id": "y84SANaBmHE-5",
-          "name": "江南",
-          "lat": 37.4979,
-          "lng": 127.0276
+          "name": "ソウル大学校",
+          "lat": 37.4598,
+          "lng": 126.9519
         },
         {
           "id": "y84SANaBmHE-6",
-          "name": "ソウル大学校",
-          "lat": 34.4571,
-          "lng": 126.9519
+          "name": "江南",
+          "lat": 37.4979,
+          "lng": 127.0276
         }
       ]
     },
@@ -147,37 +147,37 @@
       "title": "なぜ台湾は親日国なのか？歴史から日本統治時代までわかりやすく解説",
       "thumbnailUrl": "https://i.ytimg.com/vi/X9XSnKJlNxQ/mqdefault.jpg",
       "publishedAt": "2025-10-24T11:00:59Z",
-      "viewCount": 660678,
+      "viewCount": 660686,
       "locations": [
         {
           "id": "X9XSnKJlNxQ-0",
           "name": "春水堂 創始店",
-          "lat": 24.1384,
-          "lng": 120.6756
+          "lat": 24.1378,
+          "lng": 120.6729
         },
         {
           "id": "X9XSnKJlNxQ-1",
-          "name": "台湾総統府",
+          "name": "台湾総督府 (中華民国総統府)",
           "lat": 25.04,
           "lng": 121.512
         },
         {
           "id": "X9XSnKJlNxQ-2",
-          "name": "国立台湾大学",
+          "name": "国立台湾大学 (旧台北帝国大学)",
           "lat": 25.017,
-          "lng": 121.54
+          "lng": 121.539
         },
         {
           "id": "X9XSnKJlNxQ-3",
           "name": "烏山頭ダム",
-          "lat": 23.203,
-          "lng": 120.375
+          "lat": 23.2,
+          "lng": 120.37
         },
         {
           "id": "X9XSnKJlNxQ-4",
           "name": "八田與一銅像",
-          "lat": 23.212,
-          "lng": 120.374
+          "lat": 23.203,
+          "lng": 120.373
         }
       ]
     },

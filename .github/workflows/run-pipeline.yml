@@ -49,6 +49,7 @@ jobs:
           bun run pipeline:extract
           bun run pipeline:geocode
           bun run pipeline:validate
+          bun run check:fix
 
       - name: 結果をコミット＆プッシュ
         env:

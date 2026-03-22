@@ -1,22 +1,58 @@
 [
   {
-    "videoId": "dUaCAVcrmWI",
-    "title": "【インド解説】何がヤバい？世界一カオスな国を現地からわかりやすく解説",
-    "thumbnailUrl": "https://i.ytimg.com/vi/dUaCAVcrmWI/mqdefault.jpg",
-    "publishedAt": "2025-03-28T11:00:59Z",
-    "viewCount": 2585064,
+    "videoId": "y84SANaBmHE",
+    "title": "韓国はなぜヤバい国なのか？現地からわかりやすく解説",
+    "thumbnailUrl": "https://i.ytimg.com/vi/y84SANaBmHE/mqdefault.jpg",
+    "publishedAt": "2026-03-20T11:00:00Z",
+    "viewCount": 170834,
     "extractedLocations": [
       {
-        "name": "デリー駅前",
-        "region": "インド・デリー",
-        "lat": 28.6428,
-        "lng": 77.2201
+        "name": "景福宮",
+        "region": "韓国ソウル特別市",
+        "lat": 37.5796,
+        "lng": 126.977
       },
       {
-        "name": "ニューデリー",
-        "region": "インド",
-        "lat": 28.6139,
-        "lng": 77.209
+        "name": "世宗大王銅像",
+        "region": "韓国ソウル特別市（光化門広場）",
+        "lat": 37.5709,
+        "lng": 126.9769
+      },
+      {
+        "name": "明洞",
+        "region": "韓国ソウル特別市",
+        "lat": 37.5635,
+        "lng": 126.985
+      },
+      {
+        "name": "国会議事堂",
+        "region": "韓国ソウル特別市",
+        "lat": 37.5318,
+        "lng": 126.9142
+      },
+      {
+        "name": "ソウル大学校",
+        "region": "韓国ソウル特別市",
+        "lat": 37.4598,
+        "lng": 126.9519
+      },
+      {
+        "name": "サムスンデジタルシティ",
+        "region": "韓国京畿道水原市",
+        "lat": 37.2575,
+        "lng": 127.0544
+      },
+      {
+        "name": "江南",
+        "region": "韓国ソウル特別市",
+        "lat": 37.4979,
+        "lng": 127.0276
+      },
+      {
+        "name": "SMエンタテインメント本社",
+        "region": "韓国ソウル特別市",
+        "lat": 37.5443,
+        "lng": 127.0505
       }
     ]
   }

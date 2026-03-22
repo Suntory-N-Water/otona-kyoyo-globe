@@ -13,13 +13,14 @@ function seoFilesPlugin(): Plugin {
       baseUrl = config.env.VITE_BASE_URL ?? '';
     },
     closeBundle() {
+      const today = new Date().toISOString().slice(0, 10);
       writeFileSync(
         'dist/robots.txt',
         `User-agent: *\nAllow: /\n\nSitemap: ${baseUrl}/sitemap.xml\n`,
       );
       writeFileSync(
         'dist/sitemap.xml',
-        `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url>\n    <loc>${baseUrl}/</loc>\n    <changefreq>weekly</changefreq>\n    <priority>1.0</priority>\n  </url>\n</urlset>\n`,
+        `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url>\n    <loc>${baseUrl}/</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>1.0</priority>\n  </url>\n</urlset>\n`,
       );
     },
   };

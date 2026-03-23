@@ -27,6 +27,9 @@ export function GuideOverlay({ onDismiss }: GuideOverlayProps) {
             <p className='mt-1 text-xs leading-relaxed text-white/60'>
               地球儀上のピンをクリックすると、その場所で撮影された動画が見られます
             </p>
+            <p className='mt-1 text-xs leading-relaxed text-white/40'>
+              ピンが見えなくなったら、ズームすると再表示されます
+            </p>
           </div>
         </div>
       </div>

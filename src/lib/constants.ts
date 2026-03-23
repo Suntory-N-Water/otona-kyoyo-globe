@@ -20,3 +20,7 @@ export const CAMERA_TRANSITION_MS = 1200;
 
 // チャンネル情報
 export const CHANNEL_URL = 'https://www.youtube.com/@donttellmearai' as const;
+
+// お問い合わせフォーム URL(Google フォーム)
+export const CONTACT_FORM_URL =
+  'https://docs.google.com/forms/d/e/1FAIpQLSf8Lw8UmrS5I9tJ4bVSe5DzW3bryudED-PZKRQaXcyvP4mZ7g/viewform' as const;
